@@ -61,20 +61,24 @@ func loadCiphersFromFile(db string) map[string]Cipher {
 	return ciphers
 }
 
-func printCipher(cipherID string) {
+func printCipher(cipherID string, handshake string) {
 	cipherID = strings.ToUpper(cipherID)
+	fmt.Printf("[%s] ", handshake)
 	if _, ok := ciphers[cipherID]; ok {
-		fmt.Printf("[+] %s (0x%s)\n", ciphers[cipherID].name, cipherID)
+		fmt.Printf("%s (0x%s)\n", ciphers[cipherID].name, cipherID)
 		if verbose {
 			fmt.Printf("    Specs: Kx=%s, Au=%s, Enc=%s, Bits=%s, Mac=%s\n", ciphers[cipherID].kx, ciphers[cipherID].au, ciphers[cipherID].enc, ciphers[cipherID].bits, ciphers[cipherID].mac)
 			fmt.Printf("    Score: Kx/Au=%s, Enc/MAC=%s, Overall=%s\n", ciphers[cipherID].kxau_strength, ciphers[cipherID].enc_strength, ciphers[cipherID].overall_strength)
 		}
 	} else {
-		fmt.Printf("[+] Undocumented cipher (0x%s)\n", cipherID)
+		fmt.Printf(" Undocumented cipher (0x%s)\n", cipherID)
 	}
 }
 
 func checkCipher(id string, host string, port string, handshake string) bool {
+	if debug {
+		fmt.Printf("[-] Using handshake %s\n", handshake)
+	}
 	tlsHello := []byte("\x16")
 	tlsAlert := []byte("\x15")
 	ssl2Hello := []byte("\x00\x03")
@@ -117,40 +121,6 @@ func checkCipher(id string, host string, port string, handshake string) bool {
 	}
 	conn.Close()
 	return state
-}
-
-func fuzzCiphers(host string, port string, handshakes []string) {
-	var cipherID string
-	fmt.Printf("[*] Fuzzing %s:%s for ALL possible cipher suite IDs\n", host, port)
-	for _, handshake := range handshakes {
-		if verbose {
-			fmt.Printf("[*] Using %s handshake ...\n", handshake)
-		}
-		fmt.Printf("[-] Generating jobs\n")
-		for i := 0; i < 16777215; i++ {
-			cipherID = fmt.Sprintf("%06x", i)
-			if debug {
-				fmt.Printf("cipherID %s\n", cipherID)
-			}
-			if checkCipher(cipherID, host, port, handshake) {
-				printCipher(cipherID)
-			}
-		}
-	}
-}
-
-func knownCiphers(host string, port string, handshakes []string) {
-	fmt.Printf("[*] Scanning %s:%s for %d known cipher suites\n", host, port, len(ciphers))
-	for _, handshake := range handshakes {
-		if verbose {
-			fmt.Printf("[*] Using %s handshake\n", handshake)
-		}
-		for cipherID := range ciphers {
-			if checkCipher(cipherID, host, port, handshake) {
-				printCipher(cipherID)
-			}
-		}
-	}
 }
 
 func main() {
@@ -205,23 +175,25 @@ func main() {
 	if *debugPtr {
 		debug = true
 	}
-	fmt.Println(*hostPtr, *portPtr, *fuzzPtr)
-	// This is a Worker function. The workgroup will start however many of these
-	// you specify.
 	workhorse := func(worker int, work Work) {
-		//handshake := <-out
-		log.Printf("workgroup: worker %d handing work %d.", worker, work)
+		for _, handshake := range handshakes {
+			if checkCipher(fmt.Sprint(work), *hostPtr, *portPtr, handshake) {
+				printCipher(fmt.Sprint(work), handshake)
+			}
+		}
 	}
-
-	// This is a Work-Generator. It simply feeds work to each Worker goroutine
-	// as each is ready for Work. Although the Workers are goroutines, a
-	// workgroup uses sync.WaitGroup interanlly so this goroutine will block
-	// on the out channel until a Worker reads from the channel.
-	// The completion of this signals the workgroup's cleanup process (all the
-	// Workers will complete their work.)
 	workUnits := Generator(func(out chan<- Work) {
-		// TODO: fill me in
+		if *fuzzPtr {
+			fmt.Printf("[-] Generating jobs\n")
+			for i := 0; i < 16777215; i++ {
+				cipherID := fmt.Sprintf("%06x", i)
+				out <- cipherID
+			}
+		} else {
+			for cipherID := range ciphers {
+				out <- cipherID
+			}
+		}
 	})
-	// can also specify =< 0
 	FanOut(*perfPtr).Drain(workUnits).With(workhorse).Go()
 }
