@@ -29,8 +29,8 @@ func init() {
 	challenge = make([]byte, 32)
 }
 
-func loadCiphersFromFile(db string) map[string]Cipher {
-	var ciphers map[string]Cipher
+func loadciphersFromFile(db string) map[string]cipher {
+	var ciphers map[string]cipher
 	// we have already verified that db exists
 	f, err := os.Open(db)
 	if err != nil {
@@ -43,18 +43,18 @@ func loadCiphersFromFile(db string) map[string]Cipher {
 		if err == io.EOF {
 			break
 		}
-		cipher := Cipher{
-			id:               record[0],
-			name:             record[1],
-			protocol:         record[2],
-			kx:               record[3],
-			au:               record[4],
-			enc:              record[5],
-			bits:             record[6],
-			mac:              record[7],
-			kxau_strength:    record[8],
-			enc_strength:     record[9],
-			overall_strength: record[10],
+		cipher := cipher{
+			id:              record[0],
+			name:            record[1],
+			protocol:        record[2],
+			kx:              record[3],
+			au:              record[4],
+			enc:             record[5],
+			bits:            record[6],
+			mac:             record[7],
+			kxauStrength:    record[8],
+			encStrength:     record[9],
+			overallStrength: record[10],
 		}
 		ciphers[record[0]] = cipher
 	}
@@ -68,7 +68,7 @@ func printCipher(cipherID string, handshake string) {
 		fmt.Printf("%s (0x%s)\n", ciphers[cipherID].name, cipherID)
 		if verbose {
 			fmt.Printf("    Specs: Kx=%s, Au=%s, Enc=%s, Bits=%s, Mac=%s\n", ciphers[cipherID].kx, ciphers[cipherID].au, ciphers[cipherID].enc, ciphers[cipherID].bits, ciphers[cipherID].mac)
-			fmt.Printf("    Score: Kx/Au=%s, Enc/MAC=%s, Overall=%s\n", ciphers[cipherID].kxau_strength, ciphers[cipherID].enc_strength, ciphers[cipherID].overall_strength)
+			fmt.Printf("    Score: Kx/Au=%s, Enc/MAC=%s, Overall=%s\n", ciphers[cipherID].kxauStrength, ciphers[cipherID].encStrength, ciphers[cipherID].overallStrength)
 		}
 	} else {
 		fmt.Printf(" Undocumented cipher (0x%s)\n", cipherID)
@@ -167,7 +167,7 @@ func main() {
 		if _, err := os.Stat(*dbPtr); err != nil {
 			fmt.Printf("DB %s not found - exiting\n", *dbPtr)
 		}
-		ciphers = loadCiphersFromFile(*dbPtr)
+		ciphers = loadciphersFromFile(*dbPtr)
 	}
 	if *verbosePtr {
 		verbose = true
