@@ -29,7 +29,7 @@ func init() {
 	challenge = make([]byte, 32)
 }
 
-func loadciphersFromFile(db string) map[string]cipher {
+func loadCiphersFromFile(db string) map[string]cipher {
 	var ciphers map[string]cipher
 	// we have already verified that db exists
 	f, err := os.Open(db)
@@ -167,7 +167,7 @@ func main() {
 		if _, err := os.Stat(*dbPtr); err != nil {
 			fmt.Printf("DB %s not found - exiting\n", *dbPtr)
 		}
-		ciphers = loadciphersFromFile(*dbPtr)
+		ciphers = loadCiphersFromFile(*dbPtr)
 	}
 	if *verbosePtr {
 		verbose = true
