@@ -1,6 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/thanasisk/TLSlayer)](https://goreportcard.com/report/github.com/thanasisk/TLSlayer)
 
-# Project Title
+# TLSlayer
 
 TLSlayer is a *FAST* TLS/SSL reconnaisance tool written in Go. The primary aim is to provide a tool that has no dependencies on OpenSSL that can utilize multiple cores.
 
