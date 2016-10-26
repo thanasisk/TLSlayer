@@ -2,7 +2,7 @@
 
 # TLSlayer
 
-TLSlayer is a *FAST* TLS/SSL reconnaisance tool written in Go. The primary aim is to provide a tool that has no dependencies on OpenSSL that can utilize multiple cores.
+TLSlayer is a *FAST* TLS/SSL reconnaissance tool written in Go. The primary aim is to provide a tool that has no dependencies on OpenSSL that can utilize multiple cores.
 
 ## Getting Started
 
